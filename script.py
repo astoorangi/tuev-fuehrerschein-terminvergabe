@@ -11,9 +11,9 @@ headers = {
 
 
 def genPayloadDates(
-    month, year, locationId, vehicleServicesId="4007", vehicleTypeId="44"
+    date, locationId, vehicleServicesId="4007", vehicleTypeId="44"
 ):  # default for theoretical driving test
-    return f'{{"locale":"de-DE","isLegacyTos":false,"filterMonth":{month},"filterYear":{year},"vehicleServices":[{{"id":{vehicleServicesId}}}],"vehicleType":{{"id":{vehicleTypeId}}},"vics":[{{"id":{locationId},"externalLocale":"de-DE"}}]}}'
+    return f'{{"locale":"de-DE","isLegacyTos":false,"filterMonth":{int(date.strftime("%m"))},"filterYear":{int(date.strftime("%Y"))},"vehicleServices":[{{"id":{vehicleServicesId}}}],"vehicleType":{{"id":{vehicleTypeId}}},"vics":[{{"id":{locationId},"externalLocale":"de-DE"}}]}}'
 
 
 def genPayloadAppointments(
@@ -22,8 +22,8 @@ def genPayloadAppointments(
     return f'{{"locale":"de-DE","isLegacyTos":false,"date":{{"date":"{date.strftime("%Y-%m-%d")}"}},"vehicleServices":[{{"id":{vehicleServicesId}}}],"vehicleType":{{"id":{vehicleTypeId}}},"vics":[{{"id":{locationId},"externalLocale":"de-DE"}}]}}'
 
 
-def getAvaiblableDates(month, year, locationId):
-    payload = genPayloadDates(month, year, locationId)
+def getAvaiblableDates(date, locationId):
+    payload = genPayloadDates(date, locationId)
     response = requests.post(dateUrl, data=payload, headers=headers)
     response.close()
     res = response.json()
@@ -54,4 +54,12 @@ def getAvaiblableAppointmentsByDate(date, locationId):
                         minute=int(timeObj.strftime("%M")),
                     )
                 )
+    return appointments
+
+
+def getApointmentsInMonth(month, year, locationId):
+    appointments = []
+    for i in getAvaiblableDates(datetime.datetime(year=year, month=month, day=1), locationId):
+        for j in getAvaiblableAppointmentsByDate(i, 383):
+            appointments.append(j)
     return appointments
